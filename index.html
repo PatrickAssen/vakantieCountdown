@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Vakantie Countdown</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="bg"></div>
+  <div class="overlay"></div>
+
+  <main class="wrap">
+    <section class="card">
+      <header>
+        <div id="titleTap" class="title">⏳ Aftellen naar…</div>
+      </header>
+
+      <div class="panel">
+
+        <div class="destBox">
+          <div class="kicker">Bestemming</div>
+          <div id="place" class="place">—</div>
+          <div id="dateLine" class="meta">Vertrekdatum: —</div>
+        </div>
+
+        <div class="daysTile">
+          <div id="daysNum" class="daysNum">0</div>
+          <div class="daysLbl">DAGEN</div>
+        </div>
+
+        <div class="bottomRow">
+          <div class="timeBox">
+            <div class="timeCaption">Lokale tijd</div>
+            <div id="timeDate" class="timeDate">—</div>
+            <div id="timeClock" class="timeClock">—:—</div>
+          </div>
+
+          <button id="mapThumb" class="mapThumbBtn" type="button" aria-label="Open kaart">
+            <img id="mapImg" class="mapImg" alt="Kaart" />
+            <div class="mapHint">Tik voor kaart</div>
+          </button>
+        </div>
+
+        <!-- 🌤️ 5-daagse weersverwachting -->
+        <div class="wxStrip" aria-label="5-daagse weersverwachting">
+          <div class="wxHeader">
+            <div class="wxTitle">5-daagse weersverwachting</div>
+          </div>
+          <div id="wxRow" class="wxRow"></div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Fullscreen Google map -->
+  <div id="mapBackdrop" class="map-backdrop" aria-hidden="true">
+    <div class="map-full" role="dialog" aria-modal="true">
+      <button id="mapClose" class="closeX" aria-label="Sluiten">×</button>
+      <iframe id="mapEmbed" class="mapIframe" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+  </div>
+
+  <!-- Admin -->
+  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true">
+      <h2>Admin</h2>
+
+      <label for="location">Locatie</label>
+      <input id="location" placeholder="bijv. Curaçao, Jan Thiel, Chogogo" />
+
+      <label for="depart">Vertrekdatum</label>
+      <input id="depart" type="date" />
+
+      <label for="radius">Straal (km)</label>
+      <input id="radius" type="number" value="25" min="1" />
+
+      <div class="row">
+        <button id="btnCloseAdmin" class="btn" type="button">Sluiten</button>
+        <button id="btnSave" class="btn primary" type="button">Opslaan</button>
+      </div>
+
+      <div id="msg" class="msg"></div>
+      <div class="hint">Admin: Shift + . (desktop) · long-press titel (iPhone)</div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
