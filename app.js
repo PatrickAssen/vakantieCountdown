@@ -3,22 +3,23 @@ const STORAGE = "vacation_countdown_final";
 
 const $ = (id) => document.getElementById(id);
 
-const placeEl = $("place");
-const dateLine = $("dateLine");
-const daysNum  = $("daysNum");
-const timeDate = $("timeDate");
-const timeClock= $("timeClock");
+// UI refs
+const placeEl   = $("place");
+const dateLine  = $("dateLine");
+const daysNum   = $("daysNum");
+const timeDate  = $("timeDate");
+const timeClock = $("timeClock");
 
-const mapThumb = $("mapThumb");
-const mapImg   = $("mapImg");
+const mapThumb    = $("mapThumb");
+const mapImg      = $("mapImg");
 const mapBackdrop = $("mapBackdrop");
-const mapClose = $("mapClose");
-const mapEmbed = $("mapEmbed");
+const mapClose    = $("mapClose");
+const mapEmbed    = $("mapEmbed");
 
-const modalBackdrop = $("modalBackdrop");
-const btnSave = $("btnSave");
-const btnCloseAdmin = $("btnCloseAdmin");
-const msg = $("msg");
+const modalBackdrop  = $("modalBackdrop");
+const btnSave        = $("btnSave");
+const btnCloseAdmin  = $("btnCloseAdmin");
+const msg            = $("msg");
 
 const inpLocation = $("location");
 const inpDepart   = $("depart");
@@ -27,20 +28,25 @@ const titleTap    = $("titleTap");
 
 const wxRow = $("wxRow");
 
+// Default state
 const DEFAULT = {
   location: "Nederland, Assen",
   depart: null,      // yyyy-mm-dd
   radius: 25,
   center: null,      // {lat, lon}
-  timeZoneId: null   // IANA, bv "America/Curacao"
+  timeZoneId: null   // IANA (uit Geoapify reverse geocode)
 };
 
 function load(){
-  try { return { ...DEFAULT, ...(JSON.parse(localStorage.getItem(STORAGE)) || {}) }; }
-  catch { return { ...DEFAULT }; }
+  try {
+    return { ...DEFAULT, ...(JSON.parse(localStorage.getItem(STORAGE)) || {}) };
+  } catch {
+    return { ...DEFAULT };
+  }
 }
 function save(d){ localStorage.setItem(STORAGE, JSON.stringify(d)); }
 
+// ---------- helpers ----------
 function euDate(iso){
   if(!iso) return "—";
   const [y,m,d] = iso.split("-");
@@ -59,8 +65,7 @@ function updateCountdown(dep){
 }
 
 /**
- * Belangrijk: als timeZoneId ontbreekt, tonen we NIET jouw lokale tijd,
- * maar placeholders. Zo zie je meteen dat TZ nog niet is opgehaald.
+ * Als timeZoneId ontbreekt: NIET jouw lokale tijd tonen.
  */
 function updateTime(timeZoneId){
   if(!timeZoneId){
@@ -89,6 +94,9 @@ async function geocode(q){
   return { lat: +j[0].lat, lon: +j[0].lon };
 }
 
+/**
+ * Geoapify reverse geocode → timezone name zit in results[0].timezone.name
+ */
 async function fetchTimeZone(lat, lon){
   const url = new URL("https://api.geoapify.com/v1/geocode/reverse");
   url.searchParams.set("lat", String(lat));
@@ -101,10 +109,7 @@ async function fetchTimeZone(lat, lon){
 
   const json = await res.json();
   const tz = json?.results?.[0]?.timezone?.name || null;
-
-  // Debug (tijdelijk laten staan om zeker te zijn)
   console.log("Geoapify timezone:", tz);
-
   return tz;
 }
 
@@ -142,7 +147,8 @@ function svgPlaceholder(textTop="Kaart", textBottom="Tik voor kaart"){
 }
 
 /**
- * Fix: marker kleur met '#' wordt door URLSearchParams correct ge-encoded.
+ * Geoapify Static map URL
+ * marker kleur met '#' wordt door URLSearchParams correct ge-encoded.
  */
 function buildStatic(lat, lon, zoom){
   const url = new URL("https://maps.geoapify.com/v1/staticmap");
@@ -155,54 +161,106 @@ function buildStatic(lat, lon, zoom){
   url.searchParams.set("zoom", String(zoom));
   url.searchParams.set("marker", marker);
   url.searchParams.set("apiKey", GEOAPIFY_KEY);
-  url.searchParams.set("_ts", String(Date.now()));
+  url.searchParams.set("_ts", String(Date.now())); // cache-buster
+
   return url.toString();
 }
 
-function updateMap(d){
-  const z = zoomFromRadius(d.radius);
+function updateMap(state){
+  const z = zoomFromRadius(state.radius);
 
-  mapEmbed.src = buildGoogle(d.location, z);
+  // Fullscreen (Google embed)
+  mapEmbed.src = buildGoogle(state.location, z);
 
+  // Mini-map fallback
   mapImg.onerror = null;
   mapImg.src = svgPlaceholder("Kaart", "Tik voor kaart");
 
   if(!GEOAPIFY_KEY) return;
-  if(!d.center || !Number.isFinite(d.center.lat) || !Number.isFinite(d.center.lon)) return;
+  if(!state.center || !Number.isFinite(state.center.lat) || !Number.isFinite(state.center.lon)) return;
 
-  const staticUrl = buildStatic(d.center.lat, d.center.lon, z);
+  const staticUrl = buildStatic(state.center.lat, state.center.lon, z);
+
   mapImg.onerror = () => {
     mapImg.src = svgPlaceholder("Kaart laden mislukt", "Tik voor fullscreen");
   };
   mapImg.src = staticUrl;
 }
 
-// demo forecast (later echte API)
-function renderForecast(){
-  const icons = ["☀️","🌤️","🌦️","☀️","🌤️"];
-  const temps = [29,29,28,30,30];
+// ---------- WEER (Open-Meteo, geen API key nodig) ----------
+async function fetchWeather(lat, lon){
+  const url = new URL("https://api.open-meteo.com/v1/forecast");
+  url.searchParams.set("latitude", String(lat));
+  url.searchParams.set("longitude", String(lon));
+  url.searchParams.set("daily", "weathercode,temperature_2m_max");
+  url.searchParams.set("timezone", "auto");
+  url.searchParams.set("forecast_days", "5");
+
+  const res = await fetch(url.toString());
+  if(!res.ok) throw new Error("Weather fetch failed");
+  return await res.json();
+}
+
+function weatherEmoji(code){
+  if(code === 0) return "☀️";
+  if([1,2].includes(code)) return "🌤️";
+  if(code === 3) return "☁️";
+  if([45,48].includes(code)) return "🌫️";
+  if([51,53,55].includes(code)) return "🌦️";
+  if([61,63,65].includes(code)) return "🌧️";
+  if([71,73,75].includes(code)) return "❄️";
+  if([80,81,82].includes(code)) return "🌧️";
+  if([95,96,99].includes(code)) return "⛈️";
+  return "🌡️";
+}
+
+function fmtWeekday(isoDate){
+  const d = new Date(isoDate + "T00:00:00");
+  return new Intl.DateTimeFormat("nl-NL", { weekday:"short" })
+    .format(d).replace(/\./g,"").toLowerCase();
+}
+
+function renderWeather(wx){
+  if(!wxRow) return;
+
+  const times = wx?.daily?.time || [];
+  const tmax  = wx?.daily?.temperature_2m_max || [];
+  const codes = wx?.daily?.weathercode || [];
 
   wxRow.innerHTML = "";
-  for(let i=0;i<5;i++){
-    const d = new Date(Date.now() + i*86400000);
-    const day = new Intl.DateTimeFormat("nl-NL", { weekday:"short" })
-      .format(d).replace(/\./g,"").toLowerCase();
 
+  for(let i=0; i<Math.min(5, times.length); i++){
     const item = document.createElement("div");
     item.className = "wxItem";
     item.innerHTML = `
-      <div class="wx-day">${day}</div>
-      <div class="wx-ico">${icons[i]}</div>
-      <div class="wx-temp">${temps[i]}°</div>
+      <div class="wx-day">${fmtWeekday(times[i])}</div>
+      <div class="wx-ico">${weatherEmoji(codes[i])}</div>
+      <div class="wx-temp">${Math.round(tmax[i])}°</div>
     `;
     wxRow.appendChild(item);
   }
 }
 
-/**
- * Cruciaal: we garanderen dat center + timeZoneId er komen.
- * Als TZ faalt (quota/CORS), herproberen we later.
- */
+async function updateWeather(center){
+  if(!wxRow) return;
+
+  wxRow.innerHTML = `<div class="wxLoading">Weer laden…</div>`;
+
+  if(!center || !Number.isFinite(center.lat) || !Number.isFinite(center.lon)){
+    wxRow.innerHTML = `<div class="wxLoading">Geen locatie</div>`;
+    return;
+  }
+
+  try{
+    const wx = await fetchWeather(center.lat, center.lon);
+    renderWeather(wx);
+  } catch (e){
+    console.error(e);
+    wxRow.innerHTML = `<div class="wxLoading">Weer laden mislukt</div>`;
+  }
+}
+
+// ---------- ensure center + timezone ----------
 async function ensureGeoAndTZ(state){
   if(!state.center){
     state.center = await geocode(state.location);
@@ -214,21 +272,23 @@ async function ensureGeoAndTZ(state){
   return state;
 }
 
+// ---------- UI update ----------
 function updateUI(state){
   placeEl.textContent = state.location || "—";
   updateCountdown(state.depart);
-  updateTime(state.timeZoneId);     // <-- NOOIT meer lokaal fallback
+  updateTime(state.timeZoneId);
   updateMap(state);
-  renderForecast();
 
+  // inputs (admin)
   inpLocation.value = state.location || "";
   inpDepart.value = state.depart || "";
   inpRadius.value = state.radius || 25;
 }
 
-// ====== STATE (niet elke seconde load() doen) ======
+// ---------- STATE ----------
 let STATE = load();
 
+// ---------- Events ----------
 btnSave.onclick = async () => {
   STATE.location = inpLocation.value.trim();
   STATE.depart   = inpDepart.value || null;
@@ -236,12 +296,15 @@ btnSave.onclick = async () => {
 
   msg.textContent = "Opslaan…";
 
-  // reset zodat nieuwe locatie altijd opnieuw bepaalt
+  // reset → altijd opnieuw bepalen bij nieuwe locatie
   STATE.center = null;
   STATE.timeZoneId = null;
 
   await ensureGeoAndTZ(STATE);
   updateUI(STATE);
+
+  // ✅ Cruciaal: weer updaten bij nieuwe locatie
+  await updateWeather(STATE.center);
 
   msg.textContent = "Opgeslagen";
 };
@@ -251,6 +314,7 @@ mapThumb.onclick = () => { mapBackdrop.style.display = "block"; };
 mapClose.onclick = () => { mapBackdrop.style.display = "none"; };
 mapBackdrop.onclick = (e) => { if(e.target === mapBackdrop) mapBackdrop.style.display = "none"; };
 
+// Desktop admin open + Escape
 document.addEventListener("keydown",(e)=>{
   if(e.shiftKey && e.key === ".") modalBackdrop.style.display = "flex";
   if(e.key === "Escape"){
@@ -266,15 +330,55 @@ titleTap.onmouseup = () => clearTimeout(pressTimer);
 titleTap.ontouchstart = titleTap.onmousedown;
 titleTap.ontouchend = titleTap.onmouseup;
 
+// ---------- Swipe-down om kaart te sluiten ----------
+const mapFull = document.querySelector(".map-full");
+let startY = null;
+let currentY = null;
+
+mapFull.addEventListener("touchstart", (e) => {
+  if(e.touches.length !== 1) return;
+  startY = e.touches[0].clientY;
+  mapFull.classList.add("dragging");
+}, { passive: true });
+
+mapFull.addEventListener("touchmove", (e) => {
+  if(startY === null) return;
+  currentY = e.touches[0].clientY;
+  const deltaY = currentY - startY;
+
+  if(deltaY > 0){
+    mapFull.style.transform = `translateY(${deltaY}px)`;
+    mapFull.style.opacity = `${1 - deltaY / 300}`;
+  }
+}, { passive: true });
+
+mapFull.addEventListener("touchend", () => {
+  const deltaY = (currentY ?? startY) - startY;
+
+  mapFull.classList.remove("dragging");
+
+  if(deltaY > 120){
+    mapBackdrop.style.display = "none";
+  }
+
+  mapFull.style.transform = "";
+  mapFull.style.opacity = "";
+
+  startY = null;
+  currentY = null;
+}, { passive: true });
+
+// ---------- Init ----------
 (async function init(){
   STATE = await ensureGeoAndTZ(STATE);
   updateUI(STATE);
+  await updateWeather(STATE.center);
 
-  // Live updates: TZ blijft uit STATE komen
+  // live: tijd + countdown
   setInterval(()=>updateTime(STATE.timeZoneId), 1000);
   setInterval(()=>updateCountdown(STATE.depart), 1000);
 
-  // Als timezone ooit null blijft (API faalde): elke 60s opnieuw proberen
+  // als timezone ooit null blijft (API faalde): elke 60s opnieuw proberen
   setInterval(async ()=>{
     if(STATE.center && !STATE.timeZoneId){
       STATE.timeZoneId = await fetchTimeZone(STATE.center.lat, STATE.center.lon);
@@ -282,4 +386,11 @@ titleTap.ontouchend = titleTap.onmouseup;
       updateTime(STATE.timeZoneId);
     }
   }, 60000);
+
+  // optioneel: weer 1x per uur verversen
+  setInterval(async ()=>{
+    if(STATE.center){
+      await updateWeather(STATE.center);
+    }
+  }, 3600000);
 })();
