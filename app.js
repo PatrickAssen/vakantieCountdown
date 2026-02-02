@@ -14,6 +14,7 @@ const mapImg   = $("mapImg");
 const mapBackdrop = $("mapBackdrop");
 const mapClose = $("mapClose");
 const mapEmbed = $("mapEmbed");
+const mapLoader = $("mapLoader");
 
 const modalBackdrop = $("modalBackdrop");
 const btnSave = $("btnSave");
@@ -178,7 +179,13 @@ function updateMap(state){
   };
   mapImg.src = staticUrl;
 }
+function showMapLoader(){
+  if(mapLoader) mapLoader.style.display = "flex";
+}
 
+function hideMapLoader(){
+  if(mapLoader) mapLoader.style.display = "none";
+}
 // ====== WEER (Open-Meteo, geen API key nodig) ======
 async function fetchWeather(lat, lon){
   const url = new URL("https://api.open-meteo.com/v1/forecast");
@@ -319,9 +326,28 @@ btnSave.onclick = async () => {
 btnCloseAdmin.onclick = closeAdmin;
 
 // map open/close
-mapThumb.onclick = () => { mapBackdrop.style.display = "block"; mapBackdrop.setAttribute("aria-hidden","false"); };
-mapClose.onclick = () => { mapBackdrop.style.display = "none"; mapBackdrop.setAttribute("aria-hidden","true"); };
-mapBackdrop.onclick = (e) => { if(e.target === mapBackdrop){ mapBackdrop.style.display = "none"; mapBackdrop.setAttribute("aria-hidden","true"); } };
+mapThumb.onclick = () => {
+  mapBackdrop.style.display = "block";
+  showMapLoader();
+
+  // force reload event ook als src hetzelfde blijft
+  const src = mapEmbed.src;
+  mapEmbed.src = "";
+  mapEmbed.src = src;
+};
+
+mapClose.onclick = () => {
+  mapBackdrop.style.display = "none";
+  hideMapLoader();
+};
+
+mapBackdrop.onclick = (e) => {
+  if(e.target === mapBackdrop){
+    mapBackdrop.style.display = "none";
+    hideMapLoader();
+  }
+};
+
 
 // keyboard shortcuts
 document.addEventListener("keydown",(e)=>{
@@ -357,7 +383,9 @@ titleTap.addEventListener("keydown",(e)=>{
     openAdmin();
   }
 });
-
+mapEmbed.addEventListener("load", () => {
+  hideMapLoader();
+});
 (async function init(){
   STATE = await ensureGeoAndTZ(STATE);
   updateUI(STATE);
