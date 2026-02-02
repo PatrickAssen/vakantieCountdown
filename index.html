@@ -6,18 +6,18 @@
 
   <!-- PWA / iOS -->
   <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#001a3a">
 
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Vakantie Countdown">
 
-  <!-- iOS app icon  -->
+  <!-- iOS app icon -->
   <link rel="apple-touch-icon" href="/icons/icon-180.png">
 
   <title>Vakantie Countdown</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-
 
 <body>
   <div class="bg"></div>
@@ -26,7 +26,7 @@
   <main class="wrap">
     <section class="card">
       <header>
-        <div id="titleTap" class="title">⏳ Aftellen naar…</div>
+        <div id="titleTap" class="title" role="button" tabindex="0" aria-label="Open admin">⏳ Aftellen naar…</div>
       </header>
 
       <div class="panel">
@@ -69,7 +69,7 @@
 
   <!-- Fullscreen Google map -->
   <div id="mapBackdrop" class="map-backdrop" aria-hidden="true">
-    <div class="map-full" role="dialog" aria-modal="true">
+    <div class="map-full" role="dialog" aria-modal="true" aria-label="Kaart">
       <button id="mapClose" class="closeX" aria-label="Sluiten">×</button>
       <iframe id="mapEmbed" class="mapIframe" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
     </div>
@@ -77,17 +77,17 @@
 
   <!-- Admin -->
   <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="Admin">
       <h2>Admin</h2>
 
       <label for="location">Locatie</label>
-      <input id="location" placeholder="bijv. Curaçao, Jan Thiel, Chogogo" />
+      <input id="location" placeholder="bijv. Curaçao, Jan Thiel, Chogogo" autocomplete="off" autocapitalize="words" />
 
       <label for="depart">Vertrekdatum</label>
       <input id="depart" type="date" />
 
       <label for="radius">Straal (km)</label>
-      <input id="radius" type="number" value="25" min="1" />
+      <input id="radius" type="number" value="25" min="1" inputmode="numeric" />
 
       <div class="row">
         <button id="btnCloseAdmin" class="btn" type="button">Sluiten</button>
