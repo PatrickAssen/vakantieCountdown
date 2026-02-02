@@ -68,12 +68,21 @@
   </main>
 
   <!-- Fullscreen Google map -->
-  <div id="mapBackdrop" class="map-backdrop" aria-hidden="true">
-    <div class="map-full" role="dialog" aria-modal="true" aria-label="Kaart">
-      <button id="mapClose" class="closeX" aria-label="Sluiten">×</button>
-      <iframe id="mapEmbed" class="mapIframe" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+ <div id="mapBackdrop" class="map-backdrop" aria-hidden="true">
+  <div class="map-full" role="dialog" aria-modal="true">
+
+    <button id="mapClose" class="closeX" aria-label="Sluiten">×</button>
+
+    <!-- Spinner overlay -->
+    <div id="mapLoader" class="mapLoader" aria-hidden="true">
+      <div class="spinner" aria-label="Kaart laden"></div>
+      <div class="mapLoaderText">Kaart laden…</div>
     </div>
+
+    <iframe id="mapEmbed" class="mapIframe" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
   </div>
+</div>
+
 
   <!-- Admin -->
   <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
