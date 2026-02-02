@@ -1,8 +1,12 @@
 *{box-sizing:border-box}
 html,body{
-  margin:0;height:100%;
+  margin:0;
+  height:100%;
+  min-height:100svh;               /* ✅ iOS: echt schermvullend */
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  color:#fff
+  color:#fff;
+  background:#001a3a;              /* ✅ voorkomt witte balk onderin */
+  overscroll-behavior: none;       /* ✅ minder rubber-band wit */
 }
 
 .bg{
@@ -20,7 +24,7 @@ html,body{
 }
 
 .wrap{
-  min-height:100%;
+  min-height:100svh; /* ✅ */
   display:flex;
   align-items:center;
   justify-content:center;
@@ -39,7 +43,12 @@ html,body{
   box-shadow:0 30px 80px rgba(0,0,0,.6);
 }
 
-.title{font-weight:900;font-size:16px}
+.title{
+  font-weight:900;
+  font-size:16px;
+  -webkit-user-select:none; user-select:none; /* ✅ voorkomt iOS selectie bij long-press */
+}
+
 .panel{display:flex;flex-direction:column;gap:12px}
 
 .destBox,.daysTile,.timeBox,.mapThumbBtn,.wxStrip{
@@ -70,6 +79,7 @@ html,body{
   height:150px;
   cursor:pointer;
   -webkit-tap-highlight-color: transparent;
+  border-radius:18px;
 }
 .mapImg{width:100%;height:100%;object-fit:cover;display:block}
 .mapHint{
@@ -118,10 +128,11 @@ html,body{
   position:fixed;inset:0;display:none;
   background:rgba(0,0,0,.8);z-index:50;
 }
+
 .map-full{
   position:absolute;
 
-  /* rekening houden met iOS notch / statusbar */
+  /* ✅ rekening houden met iOS notch / statusbar */
   top: calc(env(safe-area-inset-top) + 10px);
   right: calc(env(safe-area-inset-right) + 10px);
   bottom: calc(env(safe-area-inset-bottom) + 10px);
@@ -129,24 +140,15 @@ html,body{
 
   border-radius:18px;
   overflow:hidden;
-
   border:1px solid rgba(255,255,255,.18);
 }
 
-/* ✅ Swipe-down om te sluiten (feedback + iOS touch gedrag) */
-.map-full{
-  touch-action: pan-y;
-  transition: transform .25s ease, opacity .25s ease;
-}
-.map-full.dragging{
-  transition: none;
-}
-
 .mapIframe{width:100%;height:100%;border:0}
+
 .closeX{
   position:absolute;
 
-  /* ⬇️ onder de iOS statusbar */
+  /* ✅ onder de iOS statusbar (en dus klikbaar) */
   top: calc(env(safe-area-inset-top) + 12px);
   right: calc(env(safe-area-inset-right) + 12px);
 
@@ -165,33 +167,58 @@ html,body{
   border:none;
   cursor:pointer;
 
-  z-index:9999; /* altijd boven kaart + iframe */
+  z-index:9999; /* ✅ altijd boven iframe */
 }
 
-/* admin (glass/dark zoals eerder) */
+/* admin */
 .modal-backdrop{
   position:fixed;inset:0;display:none;
   background:rgba(0,0,0,.7);z-index:60;
   align-items:center;justify-content:center;
+  padding:12px;
 }
+
 .modal{
   width:min(520px,100%);
-  margin:12px;padding:14px;
+  margin:0;
+  padding:14px;
   border-radius:18px;
   background:rgba(0,0,0,.7);
   border:1px solid rgba(255,255,255,.18);
   backdrop-filter: blur(10px);
+
+  /* ✅ keyboard: niet hele pagina “schalen”, maar modal scrollt */
+  max-height: calc(100svh - 24px);
+  overflow:auto;
+  -webkit-overflow-scrolling: touch;
 }
-.modal h2{margin:0 0 10px 0;font-size:18px;font-weight:900}
+
+.modal h2{
+  margin:0 0 10px 0;
+  font-size:18px;
+  font-weight:900;
+  -webkit-user-select:none; user-select:none; /* ✅ geen selectie op “Admin” */
+}
+
 label{font-size:12px;opacity:.8;display:block;margin:8px 0 6px}
 
+/* ✅ iOS zoom fix + date input breedte fix */
 input{
-  width:100%;margin-bottom:8px;
-  padding:10px 12px;border-radius:12px;
+  width:100%;
+  margin-bottom:8px;
+  padding:10px 12px;
+  border-radius:12px;
   border:1px solid rgba(255,255,255,.25);
   background:rgba(255,255,255,.10);
-  color:#fff;outline:none;
+  color:#fff;
+  outline:none;
+
+  font-size:16px;                 /* ✅ voorkomt iOS zoom */
+  line-height:1.2;
+  -webkit-appearance:none;        /* ✅ date input aligned */
+  appearance:none;
 }
+
 input:focus{border-color: rgba(37,220,113,.55)}
 
 .row{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
@@ -203,4 +230,4 @@ input:focus{border-color: rgba(37,220,113,.55)}
 }
 .primary{background:#00a8a8;color:#fff;font-weight:900}
 .msg{font-size:13px;margin-top:8px}
-.hint{font-size:12px;opacity:.7;margin-top:10px}
+.hint{font-size:12px;opacity:.7;margin-top:10px;-webkit-user-select:none; user-select:none}
