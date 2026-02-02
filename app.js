@@ -107,11 +107,16 @@ async function fetchTimeZone(lat, lon){
 }
 
 function zoomFromRadius(r){
-  if(r <= 5) return 13;
-  if(r <= 10) return 12;
-  if(r <= 25) return 11;
-  return 10;
+  const km = Math.max(1, Number(r) || 25);
+
+  // log schaal: verdubbeling km -> ~1 zoom level minder
+  let z = Math.round(13 - Math.log2(km / 5));
+
+  // begrenzen zodat het bruikbaar blijft
+  z = Math.max(3, Math.min(16, z));
+  return z;
 }
+
 
 function buildGoogle(q, z){
   return `https://www.google.com/maps?q=${encodeURIComponent(q)}&z=${z}&output=embed`;
