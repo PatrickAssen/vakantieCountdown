@@ -161,7 +161,38 @@ header {
 }
 
 .mapIframe{width:100%;height:100%;border:0}
+/* Spinner overlay voor fullscreen kaart */
+.mapLoader{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  background:rgba(0,0,0,.35);
+  backdrop-filter: blur(6px);
+  z-index: 9000; /* onder closeX (9999), boven iframe */
+}
 
+.spinner{
+  width:44px;
+  height:44px;
+  border-radius:50%;
+  border:4px solid rgba(255,255,255,.25);
+  border-top-color: rgba(255,255,255,.95);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin{
+  to{ transform: rotate(360deg); }
+}
+
+.mapLoaderText{
+  font-size:14px;
+  font-weight:800;
+  opacity:.95;
+}
 .closeX{
   position:absolute;
 
