@@ -8,6 +8,9 @@ html,body{
   background:#001a3a;              /* ✅ voorkomt witte balk onderin */
   overscroll-behavior: none;       /* ✅ minder rubber-band wit */
 }
+header {
+  margin-bottom: 12px; /* extra ademruimte onder de titelbalk */
+}
 
 .bg{
   position:fixed;inset:0;z-index:-2;
@@ -59,6 +62,11 @@ html,body{
 }
 
 .kicker{font-size:12px;opacity:.8}
+.kicker {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
 .place{font-size:30px;font-weight:900;line-height:1.05}
 .meta{font-size:12px;opacity:.85}
 
@@ -99,6 +107,15 @@ html,body{
   gap:8px;
   justify-items:center;
   align-items:center;
+}
+.title {
+  user-select: none;
+  -webkit-user-select: none;
+  padding-bottom: 6px; /* kleine bufferzone */
+}
+.destBox {
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .wxItem{
