@@ -235,7 +235,16 @@ input{
   -webkit-appearance:none;        /* ✅ date input aligned */
   appearance:none;
 }
+/* iOS: datumveld links uitlijnen */
+input[type="date"]{
+  text-align: left;
+  -webkit-text-align: left;
+}
 
+/* iOS interne datumtekst forceren naar links */
+input[type="date"]::-webkit-date-and-time-value{
+  text-align: left;
+}
 input:focus{border-color: rgba(37,220,113,.55)}
 
 .row{display:flex;justify-content:space-between;gap:10px;margin-top:8px}
