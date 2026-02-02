@@ -253,19 +253,21 @@ label{font-size:12px;opacity:.8;display:block;margin:8px 0 6px}
 /* ✅ iOS zoom fix + date input breedte fix */
 input{
   width:100%;
+  height:48px;              /* ⬅️ DIT lost het probleem op */
   margin-bottom:8px;
-  padding:10px 12px;
+  padding:0 12px;           /* verticale padding via height */
   border-radius:12px;
   border:1px solid rgba(255,255,255,.25);
   background:rgba(255,255,255,.10);
   color:#fff;
   outline:none;
-
-  font-size:16px;                 /* ✅ voorkomt iOS zoom */
-  line-height:1.2;
-  -webkit-appearance:none;        /* ✅ date input aligned */
+  font-size:16px;           /* voorkomt iOS zoom */
+  line-height:48px;         /* visueel centreren tekst */
+  box-sizing:border-box;
   appearance:none;
+  -webkit-appearance:none;
 }
+
 /* iOS: datumveld links uitlijnen */
 input[type="date"]{
   text-align: left;
